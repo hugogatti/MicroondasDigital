@@ -1,0 +1,42 @@
+﻿@page "/configuracao"
+@using MicroondasDigital.Business.Interfaces
+@inject IMicroondasService MicroondasService
+
+<h3>Micro-ondas</h3>
+
+<div>
+    <label for="tempo">Tempo (segundos):</label>
+    <input type="number" id="tempo" @bind="Tempo" min="1" max="300" />
+</div>
+
+<div>
+    <label for="potencia">Potência (%):</label>
+    <input type="number" id="potencia" @bind="Potencia" min="1" max="100" />
+</div>
+
+<button @onclick="IniciarAquecimento">Iniciar Aquecimento</button>
+<button @onclick="PausarAquecimento">Pausar</button>
+<button @onclick="CancelarAquecimento">Cancelar</button>
+
+<p>@EstadoAquecimento</p>
+
+@code {
+    private int Tempo { get; set; }
+    private int Potencia { get; set; }
+    private string EstadoAquecimento { get; set; } = "Aguardando início...";
+
+    private async Task IniciarAquecimento()
+    {
+        EstadoAquecimento = await MicroondasService.IniciarAquecimento(Tempo, Potencia);
+    }
+
+    private async Task PausarAquecimento()
+    {
+        EstadoAquecimento = await MicroondasService.PausarAquecimento();
+    }
+
+    private async Task CancelarAquecimento()
+    {
+        EstadoAquecimento = await MicroondasService.CancelarAquecimento();
+    }
+}

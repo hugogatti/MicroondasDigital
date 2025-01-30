@@ -1,0 +1,13 @@
+﻿@page "/"
+
+@inject NavigationManager Navigation
+
+<PageTitle>Index</PageTitle>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        // Redireciona para a página de configuração
+        Navigation.NavigateTo("/configuracao");
+    }
+}
