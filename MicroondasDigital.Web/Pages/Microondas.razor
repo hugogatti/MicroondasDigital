@@ -1,5 +1,6 @@
 ﻿@page "/microondas"
 @using MicroondasDigital.Business.Interfaces
+@using System.Text
 @inject IMicroondasService MicroondasService
 
 <h3>Micro-ondas Web</h3>
@@ -26,11 +27,12 @@
         </div>
 
         <p>@EstadoAquecimento</p>
+        <p>@ProcessoAquecimento</p>
     </div>
 </div>
 
 @code {
-    private string TempoAtual { get; set; } = "0000";  // Armazenando tempo no formato MMSS
+    private string TempoAtual { get; set; } = "0000"; // Armazenando tempo no formato MMSS
     private int Potencia { get; set; } = 10;
     private bool ExibirPotencia { get; set; } = false;
     private string EstadoAquecimento { get; set; } = "Aguardando início...";
@@ -38,72 +40,37 @@
     private bool Pausado { get; set; } = false;
     private string AcendeVisor { get; set; } = "visor-inativo";
     private System.Timers.Timer? Timer;
+    private StringBuilder ProcessoAquecimentoSB = new StringBuilder();
 
+    private string ProcessoAquecimento => ProcessoAquecimentoSB.ToString();
     private string TextoBotaoPausarCancelar => Pausado ? "Cancelar" : "Pausar";
 
     // Método para determinar o que exibir no display (tempo ou potência)
     private string DisplayTexto => ExibirPotencia ? $"P {Potencia}" : TempoAtual.Insert(2, ":");
-
-    // Método para adicionar números ao display do micro-ondas
-    private void AdicionarNumero(string numero)
-    {
-        if (ExibirPotencia == true) return; // Se o display estiver mostrando potência, ignora entrada de números.
-
-        if (TempoAtual.Length >= 4)
-        {
-            TempoAtual = (TempoAtual + numero).Substring(TempoAtual.Length >= 3 ? 1 : 0, 4);
-        }
-        ConverterTempo();
-    }
-
-    private void ConverterTempo()
-    {
-        int minutos = int.Parse(TempoAtual.Substring(0, 2));
-        int segundos = int.Parse(TempoAtual.Substring(2, 2));
-        int totalSegundos = (minutos * 60) + segundos;
-        // Se o tempo for menor que 1 segundo ou maior que 2 minutos
-        if (totalSegundos < 1 || totalSegundos > 120)
-            return;
-
-        if (totalSegundos >= 60 && totalSegundos <= 99)
-        {
-            minutos = 1;
-            segundos = totalSegundos - 60;
-            TempoAtual = minutos.ToString("D2") + segundos.ToString("D2");
-        }
-    }
 
     // Iniciar o aquecimento e a contagem regressiva
     private async Task IniciarAquecimento()
     {
         if (EmAquecimento == true)
         {
-            int minutos = int.Parse(TempoAtual.Substring(0, 2));
-            int segundos = int.Parse(TempoAtual.Substring(2, 2));
-            int tempoEmSegundos = (minutos * 60) + segundos;
-
             // acrescenta 30 segundos, mas não ultrapassa 120 segundos
-            if (tempoEmSegundos + 30 > 120)
+            int tempoAtualizado = ConverterTempoEmSegundos() + 30;
+            if (tempoAtualizado > 120)
             {
                 EstadoAquecimento = "O tempo máximo permitido é 2 minutos.";
                 return;
             }
-            tempoEmSegundos += 30;
-            minutos = tempoEmSegundos / 60;
-            segundos = tempoEmSegundos % 60;
-            TempoAtual = minutos.ToString("D2") + segundos.ToString("D2");
+            TempoAtual = ConverterSegundosParaTempo(tempoAtualizado);
+            EstadoAquecimento = "Tempo aumentado em 30 segundos!";
             return;
         }
 
-        int min = int.Parse(TempoAtual.Substring(0, 2));
-        int seg = int.Parse(TempoAtual.Substring(2, 2));
-        int tempoTotal = (min * 60) + seg;
-
+        int tempoTotal = ConverterTempoEmSegundos();
         if (tempoTotal == 0)
         {
             tempoTotal = 30;
             Potencia = 10;
-            TempoAtual = "0030"; // Atualiza o visor com 30 segundos
+            TempoAtual = "0030";
         }
 
         // Validar tempo antes de iniciar
@@ -117,11 +84,12 @@
         EmAquecimento = true;
         Pausado = false;
         ExibirPotencia = false;
+        ProcessoAquecimentoSB.Clear();
 
         Timer = new System.Timers.Timer(1000);
         Timer.Elapsed += async (sender, e) => await AtualizarContagem();
         Timer.AutoReset = true;
-        EstadoAquecimento = "Aquecimento Iniciado!";
+        EstadoAquecimento = "Aquecendo...";
         Timer.Start();
         AcendeVisor = "visor-ativo";
     }
@@ -130,7 +98,7 @@
     private async Task PausarOuCancelarAquecimento()
     {
         // Para pausar o aquecimento
-        if (EmAquecimento == true && Pausado == false)
+        if (EmAquecimento && !Pausado)
         {
             Timer?.Stop();
             AcendeVisor = "visor-inativo";
@@ -139,7 +107,7 @@
             await MicroondasService.PausarAquecimento();
         }
         // Cancelar o aquecimento
-        else if (Pausado == true)
+        else if (Pausado)
         {
             Timer?.Stop();
             AcendeVisor = "visor-inativo";
@@ -150,58 +118,58 @@
         }
     }
 
-    // Alterar a potência
-    private void MudarPotencia()
-    {
-        ExibirPotencia = true; // Ativa o modo de exibição de potência
-
-        Potencia += 1;
-        if (Potencia > 10)
-        {
-            Potencia = 1; // Volta para P10 após P100
-        }
-    }
-
     // Atualizar a contagem regressiva
     private async Task AtualizarContagem()
     {
         if (Pausado) return;
 
-        int minutos = int.Parse(TempoAtual.Substring(0, 2));
-        int segundos = int.Parse(TempoAtual.Substring(2, 2));
-
-        if (minutos == 0 && segundos == 0)
+        int segundosRestantes = ConverterTempoEmSegundos();
+        if (segundosRestantes == 0)
         {
             Timer?.Stop();
             AcendeVisor = "visor-inativo";
             EmAquecimento = false;
             EstadoAquecimento = "Aquecimento concluído!";
-
-            if (EmAquecimento == false)
-            {
-                EstadoAquecimento = "Aguardando início";
-                await InvokeAsync(StateHasChanged); // Atualiza a UI
-            }
+            ProcessoAquecimentoSB.Append(" Aquecimento concluído.");
+            await InvokeAsync(StateHasChanged);
             return;
         }
 
-        if (segundos == 0)
-        {
-            minutos--;
-            segundos = 59;
-        }
-        else
-        {
-            segundos--;
-        }
-
-        TempoAtual = minutos.ToString("D2") + segundos.ToString("D2");
+        TempoAtual = ConverterSegundosParaTempo(segundosRestantes - 1);
+        // Atualizar a string de aquecimento
+        ProcessoAquecimentoSB.Append(new string('.', Potencia) + " ");
         await InvokeAsync(StateHasChanged); // Atualiza a UI
     }
 
-    // Limpar o tempo
-    private void LimparTempo()
+    private int ConverterTempoEmSegundos()
     {
-        TempoAtual = "0000";
+        int minutos = int.Parse(TempoAtual.Substring(0, 2));
+        int segundos = int.Parse(TempoAtual.Substring(2, 2));
+        return (minutos * 60) + segundos;
+    }
+
+    private string ConverterSegundosParaTempo(int totalSegundos)
+    {
+        int minutos = totalSegundos / 60;
+        int segundos = totalSegundos % 60;
+        return minutos.ToString("D2") + segundos.ToString("D2");
+    }
+
+    // Alterar a potência
+    private void MudarPotencia()
+    {
+        ExibirPotencia = true;
+        Potencia = Potencia >= 10 ? 1 : Potencia + 1;
+    }
+
+    private void LimparTempo() => TempoAtual = "0000";
+
+    // Método para adicionar números ao display do micro-ondas
+    private void AdicionarNumero(string numero)
+    {
+        if (ExibirPotencia)
+            return;
+
+        TempoAtual = (TempoAtual + numero).Substring(TempoAtual.Length >= 3 ? 1 : 0, 4);
     }
 }
