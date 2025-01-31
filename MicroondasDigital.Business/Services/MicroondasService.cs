@@ -27,9 +27,9 @@ namespace MicroondasDigital.Business.Services
             Aquecendo = true;
 
             // Simulando o aquecimento
-            await Task.Delay(Tempo * 1000); // Simula o tempo de aquecimento
-
+            await Task.Delay(Tempo * 100); // Simula o tempo de aquecimento
             Aquecendo = false;
+
             return "Aquecimento finalizado!";
         }
 

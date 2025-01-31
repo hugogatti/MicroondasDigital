@@ -80,7 +80,15 @@
 
         int minutos = int.Parse(TempoAtual.Substring(0, 2));
         int segundos = int.Parse(TempoAtual.Substring(2, 2));
-        int tempoEmSegundos = (minutos * 60) + segundos;
+        int tempoEmSegundos = (minutos * 60) + segundos;        
+
+        // Inicio rápido
+        if (tempoEmSegundos == 0)
+        {
+            tempoEmSegundos = 30;
+            Potencia = 10;
+            TempoAtual = "0030"; // Atualiza o visor com 30 segundos
+        }
 
         // Validar tempo antes de iniciar
         if (tempoEmSegundos < 1 || tempoEmSegundos > 120)
