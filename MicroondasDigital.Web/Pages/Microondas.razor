@@ -76,28 +76,44 @@
     // Iniciar o aquecimento e a contagem regressiva
     private async Task IniciarAquecimento()
     {
-        if (EmAquecimento == true) return; // Evita iniciar várias vezes
-
-        int minutos = int.Parse(TempoAtual.Substring(0, 2));
-        int segundos = int.Parse(TempoAtual.Substring(2, 2));
-        int tempoEmSegundos = (minutos * 60) + segundos;        
-
-        // Inicio rápido
-        if (tempoEmSegundos == 0)
+        if (EmAquecimento == true)
         {
-            tempoEmSegundos = 30;
+            int minutos = int.Parse(TempoAtual.Substring(0, 2));
+            int segundos = int.Parse(TempoAtual.Substring(2, 2));
+            int tempoEmSegundos = (minutos * 60) + segundos;
+
+            // acrescenta 30 segundos, mas não ultrapassa 120 segundos
+            if (tempoEmSegundos + 30 > 120)
+            {
+                EstadoAquecimento = "O tempo máximo permitido é 2 minutos.";
+                return;
+            }
+            tempoEmSegundos += 30;
+            minutos = tempoEmSegundos / 60;
+            segundos = tempoEmSegundos % 60;
+            TempoAtual = minutos.ToString("D2") + segundos.ToString("D2");
+            return;
+        }
+
+        int min = int.Parse(TempoAtual.Substring(0, 2));
+        int seg = int.Parse(TempoAtual.Substring(2, 2));
+        int tempoTotal = (min * 60) + seg;
+
+        if (tempoTotal == 0)
+        {
+            tempoTotal = 30;
             Potencia = 10;
             TempoAtual = "0030"; // Atualiza o visor com 30 segundos
         }
 
         // Validar tempo antes de iniciar
-        if (tempoEmSegundos < 1 || tempoEmSegundos > 120)
+        if (tempoTotal < 1 || tempoTotal > 120)
         {
             EstadoAquecimento = "O tempo deve estar entre 1 segundo e 2 minutos.";
             return;
         }
-        
-        EstadoAquecimento = await MicroondasService.IniciarAquecimento(tempoEmSegundos, Potencia);
+
+        EstadoAquecimento = await MicroondasService.IniciarAquecimento(tempoTotal, Potencia);
         EmAquecimento = true;
         Pausado = false;
         ExibirPotencia = false;
@@ -129,7 +145,7 @@
             AcendeVisor = "visor-inativo";
             EmAquecimento = false;
             Pausado = false;
-            TempoAtual = "0000";            
+            TempoAtual = "0000";
             EstadoAquecimento = await MicroondasService.CancelarAquecimento();
         }
     }
@@ -158,7 +174,7 @@
         {
             Timer?.Stop();
             AcendeVisor = "visor-inativo";
-            EmAquecimento = false;            
+            EmAquecimento = false;
             EstadoAquecimento = "Aquecimento concluído!";
 
             if (EmAquecimento == false)
@@ -187,5 +203,5 @@
     private void LimparTempo()
     {
         TempoAtual = "0000";
-    }    
+    }
 }
