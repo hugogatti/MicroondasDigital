@@ -29,16 +29,16 @@ namespace MicroondasDigital.Business.Services
         public Task<string> PausarAquecimento()
         {
             if (!Aquecendo)
-                return Task.FromResult("Não há aquecimento em andamento.");
+                return Task.FromResult("Aquecimento pausado");
 
             Aquecendo = false;
-            return Task.FromResult("Aquecimento pausado.");
+            return Task.FromResult("Aquecimento pausado");
         }
 
         public Task<string> CancelarAquecimento()
         {
             if (!Aquecendo)
-                return Task.FromResult("Não há aquecimento em andamento.");
+                return Task.FromResult("Aquecimento cancelado.");
 
             Aquecendo = false;
             return Task.FromResult("Aquecimento cancelado.");
