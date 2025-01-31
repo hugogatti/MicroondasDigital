@@ -42,7 +42,7 @@
     private string TextoBotaoPausarCancelar => Pausado ? "Cancelar" : "Pausar";
 
     // Método para determinar o que exibir no display (tempo ou potência)
-    private string DisplayTexto => ExibirPotencia ? $"P{Potencia}" : TempoAtual.Insert(2, ":");
+    private string DisplayTexto => ExibirPotencia ? $"P {Potencia}" : TempoAtual.Insert(2, ":");
 
     // Método para adicionar números ao display do micro-ondas
     private void AdicionarNumero(string numero)
@@ -61,6 +61,9 @@
         int minutos = int.Parse(TempoAtual.Substring(0, 2));
         int segundos = int.Parse(TempoAtual.Substring(2, 2));
         int totalSegundos = (minutos * 60) + segundos;
+        // Se o tempo for menor que 1 segundo ou maior que 2 minutos
+        if (totalSegundos < 1 || totalSegundos > 120)
+            return;
 
         if (totalSegundos >= 60 && totalSegundos <= 99)
         {
@@ -78,6 +81,13 @@
         int minutos = int.Parse(TempoAtual.Substring(0, 2));
         int segundos = int.Parse(TempoAtual.Substring(2, 2));
         int tempoEmSegundos = (minutos * 60) + segundos;
+
+        // Validar tempo antes de iniciar
+        if (tempoEmSegundos < 1 || tempoEmSegundos > 120)
+        {
+            EstadoAquecimento = "O tempo deve estar entre 1 segundo e 2 minutos.";
+            return;
+        }
         
         EstadoAquecimento = await MicroondasService.IniciarAquecimento(tempoEmSegundos, Potencia);
         EmAquecimento = true;
@@ -121,10 +131,10 @@
     {
         ExibirPotencia = true; // Ativa o modo de exibição de potência
 
-        Potencia += 10;
-        if (Potencia > 100)
+        Potencia += 1;
+        if (Potencia > 10)
         {
-            Potencia = 10; // Volta para P10 após P100
+            Potencia = 1; // Volta para P10 após P100
         }
     }
 

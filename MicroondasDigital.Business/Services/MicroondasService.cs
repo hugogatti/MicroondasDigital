@@ -15,6 +15,13 @@ namespace MicroondasDigital.Business.Services
             if (Aquecendo)
                 return "Já está aquecendo.";
 
+            // Validar o tempo
+            if (tempo < 1 || tempo > 120)
+                return "O tempo deve estar entre 1 segundo e 2 minutos";
+
+            if (potencia < 1 || potencia > 10)
+                potencia = 10;
+
             Tempo = tempo;
             Potencia = potencia;
             Aquecendo = true;
