@@ -11,5 +11,9 @@ namespace MicroondasDigital.Business.Interfaces
         Task<string> IniciarAquecimento(int tempo, int potencia);
         Task<string> PausarAquecimento();
         Task<string> CancelarAquecimento();
+        bool Aquecendo { get; }
+        bool Pausado { get; }
+        string StringAquecimento { get; }
+        string TempoFormatado { get; }
     }
 }
