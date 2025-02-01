@@ -47,9 +47,14 @@ A solução é composta pelas seguintes camadas:
 - C#: Linguagem de programação utilizada para a implementação de toda a lógica de negócio e backend.
 
 ## Como Rodar o Projeto
-Certifique-se de ter o Visual Studio e o .NET 6.0 SDK instalados.
-Passos para rodar o projeto:
-Abra o projeto no Visual Studio 2022.
-Compile o projeto clicando em Build → Build Solution.
-Rode a aplicação pressionando F5 ou clicando em Debug → Start Debugging.
-A aplicação será aberta no navegador. O redirecionamento para a página de configuração (/configuracao) acontecerá automaticamente, como configurado.
+- Certifique-se de ter o Visual Studio e o .NET 6.0 SDK instalados.
+- Abra o projeto no Visual Studio 2022.
+- Compile o projeto clicando em Build → Build Solution.
+- Rode a aplicação pressionando F5 ou clicando em Debug → Start Debugging.
+- A aplicação será aberta no navegador.
+
+## Como exucutar os testes 🛠
+- Abrir o terminal no diretório raiz do projeto.
+- Restaurar as dependências do projeto (caso ainda não tenha feito).
+- Executar os testes com dotnet test.
+- Visualizar o resultado no terminal.
