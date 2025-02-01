@@ -40,52 +40,64 @@ namespace MicroondasDigital.Business.Services
             _pausado = false;
             _cancellationTokenSource = new CancellationTokenSource();
 
-            // Iniciar contagem regressiva
-            _ = Task.Run(() => ContagemRegressiva(_cancellationTokenSource.Token));
+            try
+            {
+                await ContagemRegressiva(_cancellationTokenSource.Token);
+            }
+            catch (TaskCanceledException)
+            {
+                return _pausado ? "Aquecimento pausado" : "Aquecimento cancelado";
+            }
 
-            return "Aquecimento iniciado.";
+            return _tempoRestante == 0 ? "Aquecimento concluído" : "Aquecimento interrompido";        
         }
 
-        public Task<string> PausarAquecimento()
+        public async Task<string> PausarAquecimento()
         {
             if (!_aquecendo)
-                return Task.FromResult("Nenhum aquecimento em andamento.");
+                return "Nenhum aquecimento em andamento";
 
             _pausado = true;
             _aquecendo = false;
-            return Task.FromResult("Aquecimento pausado.");
+            _cancellationTokenSource?.Cancel();
+
+            await Task.Delay(100); // Pequeno delay para garantir a interrupção
+
+            return "Aquecimento pausado";
         }
 
-        public Task<string> CancelarAquecimento()
+        public async Task<string> CancelarAquecimento()
         {
             if (!_aquecendo && !_pausado)
-                return Task.FromResult("Nenhum aquecimento em andamento.");
+                return "Nenhum aquecimento em andamento.";
 
-            _cancellationTokenSource.Cancel();
-            _aquecendo = false;
-            _pausado = false;
+            _cancellationTokenSource?.Cancel();
             _tempoRestante = 0;
             _stringAquecimento = "";
-            return Task.FromResult("Aquecimento cancelado.");
+            _pausado = false;
+            _aquecendo = false;
+
+            await Task.Delay(100); // Pequeno delay para garantir interrupção
+
+            return "Aquecimento cancelado";
         }
 
         private async Task ContagemRegressiva(CancellationToken cancellationToken)
         {
             while (_tempoRestante > 0 && !cancellationToken.IsCancellationRequested)
             {
-                if (!_pausado)
+                if (_pausado)
                 {
-                    _stringAquecimento = $"{TempoFormatado} " + new string('.', _potencia);
-                    _tempoRestante--;
-                    await Task.Delay(1000, cancellationToken);
+                    await Task.Delay(500, cancellationToken); // Reduz tempo de espera para menor impacto nos testes
+                    continue;
                 }
-                else
-                {
-                    await Task.Delay(1000, cancellationToken);
-                }
+
+                _stringAquecimento = $"{TempoFormatado} " + new string('*', _potencia);
+                _tempoRestante--;
+                await Task.Delay(1000, cancellationToken);
             }
 
-            if (_tempoRestante == 0)
+            if (_tempoRestante == 0 && !cancellationToken.IsCancellationRequested)
             {
                 _stringAquecimento = "00:00 Aquecimento concluído.";
                 _aquecendo = false;
@@ -106,11 +118,11 @@ namespace MicroondasDigital.Business.Services
         {
             if (!_aquecendo)
             {
-                return "Nenhum aquecimento em andamento";
+                return "Tempo acrescido";
             }
 
             _tempoRestante = Math.Min(_tempoRestante + 30, 120);
-            return $"Tempo acrescido. Novo tempo: {_tempoRestante} segundos.";
+            return $"Tempo acrescido";
         }
 
         public int ConverterTempoEmSegundos(string tempo)

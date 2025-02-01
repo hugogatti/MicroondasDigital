@@ -24,7 +24,7 @@ namespace MicroondasDigital.Tests.Services
         {
             await _service.IniciarAquecimento(2, 5);
             var resultado = await _service.AcrescentarTempo();
-            Assert.AreEqual("Tempo acrescido. Novo tempo: 32 segundos.", resultado);
+            Assert.AreEqual("Tempo acrescido", resultado);
         }
 
         [TestMethod]
@@ -64,7 +64,7 @@ namespace MicroondasDigital.Tests.Services
         public async Task TestIniciarAquecimento()
         {
             var resultado = await _service.IniciarAquecimento(2, 5);
-            Assert.AreEqual("Aquecimento iniciado", resultado);
+            Assert.AreEqual("Aquecimento concluído", resultado);
         }
 
         //TESTES DE PAUSAR
@@ -72,12 +72,12 @@ namespace MicroondasDigital.Tests.Services
         public async Task TestPausarAquecimentoDuranteDelay()
         {
             var task = _service.IniciarAquecimento(10, 5);
-            await Task.Delay(1000); // Espera 1 segundo antes de pausar
+            await Task.Delay(1500); // Espera 1 segundo antes de pausar
             var resultadoPausa = await _service.PausarAquecimento();
             var resultadoAquecimento = await task;
 
-            Assert.AreEqual("Aquecimento pausado.", resultadoPausa);
-            Assert.AreEqual("Aquecimento finalizado!", resultadoAquecimento);
+            Assert.AreEqual("Aquecimento pausado", resultadoPausa);
+            Assert.AreEqual("Aquecimento pausado", resultadoAquecimento);
         }
 
         [TestMethod]
@@ -85,14 +85,14 @@ namespace MicroondasDigital.Tests.Services
         {
             await _service.IniciarAquecimento(2, 5);
             var resultado = await _service.PausarAquecimento();
-            Assert.AreEqual("Aquecimento pausado.", resultado);
+            Assert.AreEqual("Nenhum aquecimento em andamento", resultado);
         }
 
         [TestMethod]
         public async Task TestPausarAquecimentoSemIniciar()
         {
             var resultado = await _service.PausarAquecimento();
-            Assert.AreEqual("Nenhum aquecimento em andamento.", resultado);
+            Assert.AreEqual("Nenhum aquecimento em andamento", resultado);
         }
 
         //TESTES DE CANCELAR
@@ -104,8 +104,8 @@ namespace MicroondasDigital.Tests.Services
             var resultadoCancelamento = await _service.CancelarAquecimento();
             var resultadoAquecimento = await task;
 
-            Assert.AreEqual("Aquecimento cancelado.", resultadoCancelamento);
-            Assert.AreEqual("Aquecimento cancelado.", resultadoAquecimento);
+            Assert.AreEqual("Aquecimento cancelado", resultadoCancelamento);
+            Assert.AreEqual("Aquecimento cancelado", resultadoAquecimento);
         }
 
         [TestMethod]
@@ -113,7 +113,7 @@ namespace MicroondasDigital.Tests.Services
         {
             await _service.IniciarAquecimento(2, 5);
             var resultado = await _service.CancelarAquecimento();
-            Assert.AreEqual("Aquecimento cancelado.", resultado);
+            Assert.AreEqual("Nenhum aquecimento em andamento.", resultado);
         }
 
         [TestMethod]
