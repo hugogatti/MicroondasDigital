@@ -19,6 +19,17 @@
 
 .visor-ativo {
     background: #FFDB58;
+    animation: piscar 1s infinite alternate;
+}
+
+@keyframes piscar {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0.5;
+    }
 }
 
 .visor-inativo {
